@@ -5,6 +5,8 @@ import { api } from '../api'
 import TaskModal from '../components/TaskModal'
 import '../styles/auth.css'
 import '../styles/tasks.css'
+import Logo from '../components/Logo'
+import ThemeToggle from '../components/ThemeToggle'
 
 const LABELS = {
     ONCE: 'Uma vez',
@@ -65,20 +67,14 @@ export default function Today() {
         <main className="dashboard">
             <header className="dashboard-header">
                 <a href="/today" className="brand">
-                    <img className="brand-logo" src="/logo.png" alt="" />
+                    <Logo />
                     <span>A fazer.</span>
                 </a>
 
                 <div className="user-area">
-                    <span className="user-email">
-                        {user?.name}
-                    </span>
-
-                    <button
-                        className="logout-button"
-                        type="button"
-                        onClick={handleLogout}
-                    >
+                    <span className="user-email">{user?.name}</span>
+                    <ThemeToggle />
+                    <button className="logout-button" type="button" onClick={handleLogout}>
                         Sair ↗
                     </button>
                 </div>

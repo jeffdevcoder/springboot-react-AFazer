@@ -1,14 +1,22 @@
+
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <html lang="pt-BR">
-    <title>A fazer</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A fazer</title>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+<script>
+  document.documentElement.dataset.theme = 'dark'
+  try {
+    if (localStorage.getItem('theme') === 'light') {
+      document.documentElement.dataset.theme = 'light'
+    }
+  } catch (e) {}
+</script>
+</body>
 </html>

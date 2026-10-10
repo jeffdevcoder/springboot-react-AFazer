@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import '../styles/auth.css'
+import Logo from '../components/Logo'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function Login() {
     const { login } = useAuth()
@@ -29,8 +31,10 @@ export default function Login() {
 
     return (
         <main className="auth-page">
+            <ThemeToggle className="is-floating" />
+
             <Link to="/login" className="brand" aria-label="a fazer - início">
-                <img className="brand-logo" src="/logo.png" alt="" />
+                <Logo />
                 <span>A fazer.</span>
             </Link>
 

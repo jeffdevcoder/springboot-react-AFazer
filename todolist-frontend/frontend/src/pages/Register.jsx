@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import '../styles/auth.css'
+import ThemeToggle from "../components/ThemeToggle.jsx";
+import Logo from "../components/Logo.jsx";
 
 export default function Register() {
     const navigate = useNavigate()
@@ -45,8 +47,10 @@ export default function Register() {
 
     return (
         <main className="auth-page">
+            <ThemeToggle className="is-floating" />
+
             <Link to="/login" className="brand" aria-label="a fazer - início">
-                <img className="brand-logo" src="/logo.png" alt="" />
+                <Logo />
                 <span>A fazer.</span>
             </Link>
 
