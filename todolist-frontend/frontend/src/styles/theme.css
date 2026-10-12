@@ -45,7 +45,15 @@ html[data-theme='dark'] {
     & .form-label { color: #d9dbd1; }
 
     & .form-input { background: #141512; }
-    & .form-input::placeholder { color: #70726a; }
+    .form-input::placeholder {
+        text-align: center;
+    }
+    textarea.form-input {
+        text-align: center;
+        padding: 0;
+        line-height: 150px;
+        resize: none;
+    }
     & .form-input:hover { border-color: #4a4c44; }
     & .form-input:focus { background: #181915; border-color: #9aa17f; }
 
@@ -74,6 +82,5 @@ html[data-theme='dark'] {
         --tk-accent: var(--color-primary);
     }
     & .task-modal { border: 1px solid var(--color-border); }
-    & .task-btn.is-danger,
-    & .task-error { color: #f08a8a; }
+    & .form-input { color-scheme: light; }
 }

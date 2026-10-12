@@ -9,24 +9,31 @@ const OPTIONS = [
     ['YEARLY', 'Anual'],
 ]
 
+const today = () => new Date().toLocaleDateString('en-CA')
+
 export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
     const editing = Boolean(task)
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [recurrence, setRecurrence] = useState('ONCE')
+    const [startDate, setStartDate] = useState(today)
+    const [endDate, setEndDate] = useState('')
+    const [noEnd, setNoEnd] = useState(false)
     const [error, setError] = useState('')
     const [saving, setSaving] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(false)
     const [wasOpen, setWasOpen] = useState(false)
     const titleRef = useRef(null)
 
-    // preenche o formulário toda vez que o pop-up abre
     if (open !== wasOpen) {
         setWasOpen(open)
         if (open) {
             setTitle(task?.title ?? '')
             setDescription(task?.description ?? '')
             setRecurrence(task?.recurrence ?? 'ONCE')
+            setStartDate(task?.startDate ?? today())
+            setEndDate(task?.endDate ?? '')
+            setNoEnd(task ? !task.endDate : false)
             setError('')
             setConfirmDelete(false)
         }
@@ -45,12 +52,24 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
         }
     }, [open, editing, onClose])
 
+    useEffect(() => {
+        if (!confirmDelete) return
+        const timer = setTimeout(() => setConfirmDelete(false), 4000)
+        return () => clearTimeout(timer)
+    }, [confirmDelete])
+
     async function handleSubmit(e) {
         e.preventDefault()
         setError('')
         setSaving(true)
         try {
-            const body = { title, description, recurrence }
+            const body = {
+                title,
+                description,
+                recurrence,
+                startDate,
+                endDate: noEnd ? null : endDate,
+            }
             const saved = editing
                 ? await api(`/tasks/${task.id}`, { method: 'PUT', body })
                 : await api('/tasks', { method: 'POST', body })
@@ -77,12 +96,15 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
         }
     }
 
+    const invalid = !title.trim() || !startDate || (!noEnd && !endDate)
+
     return (
         <div className={`task-overlay ${open ? 'is-open' : ''}`} onMouseDown={onClose}>
             <form className="task-modal" onSubmit={handleSubmit} onMouseDown={e => e.stopPropagation()}>
                 <h2>{editing ? 'Tarefa' : 'Nova tarefa'}</h2>
 
                 <input
+                    className="form-input"
                     ref={titleRef}
                     placeholder="Nome da tarefa"
                     value={title}
@@ -91,12 +113,47 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                     required
                 />
                 <textarea
+                    className="form-input"
                     placeholder="Descrição (opcional)"
                     value={description}
                     maxLength={500}
                     rows={3}
                     onChange={e => setDescription(e.target.value)}
                 />
+
+                <div className="task-dates">
+                    <label>
+                        <span className="form-label">Início</span>
+                        <input
+                            className="form-input"
+                            type="date"
+                            value={startDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            required
+                        />
+                    </label>
+                    <label>
+                        <span className="form-label">Fim</span>
+                        <input
+                            className="form-input"
+                            type="date"
+                            value={endDate}
+                            min={startDate}
+                            disabled={noEnd}
+                            onChange={e => setEndDate(e.target.value)}
+                            required={!noEnd}
+                        />
+                    </label>
+                </div>
+
+                <label className="task-noend">
+                    <input
+                        type="checkbox"
+                        checked={noEnd}
+                        onChange={e => setNoEnd(e.target.checked)}
+                    />
+                    <span>Sem data final</span>
+                </label>
 
                 <div className="task-options" role="radiogroup" aria-label="Repetição">
                     {OPTIONS.map(([value, label]) => (
@@ -115,14 +172,20 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
 
                 {error && <p className="task-error">{error}</p>}
 
-                <div className="task-actions">
+                <div className={`task-actions ${confirmDelete ? 'is-confirming' : ''}`}>
                     {editing && (
-                        <button type="button" className="task-btn is-danger" onClick={handleDelete}>
-                            {confirmDelete ? 'Confirmar exclusão?' : 'Excluir'}
+                        <button
+                            type="button"
+                            className={`task-btn is-danger ${confirmDelete ? 'is-confirming' : ''}`}
+                            onClick={handleDelete}
+                        >
+                        <span key={confirmDelete ? 'confirm' : 'idle'} className="task-swap">
+                            {confirmDelete ? 'Tem certeza?' : 'Excluir'}
+                        </span>
                         </button>
                     )}
                     <button type="button" className="task-btn" onClick={onClose}>Cancelar</button>
-                    <button type="submit" className="task-btn is-primary" disabled={saving || !title.trim()}>
+                    <button type="submit" className="task-btn is-primary" disabled={saving || invalid}>
                         {editing ? 'Salvar' : 'Adicionar'}
                     </button>
                 </div>
