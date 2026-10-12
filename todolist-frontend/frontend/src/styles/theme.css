@@ -45,15 +45,7 @@ html[data-theme='dark'] {
     & .form-label { color: #d9dbd1; }
 
     & .form-input { background: #141512; }
-    .form-input::placeholder {
-        text-align: center;
-    }
-    textarea.form-input {
-        text-align: center;
-        padding: 0;
-        line-height: 150px;
-        resize: none;
-    }
+    & .form-input::placeholder { color: #70726a; }
     & .form-input:hover { border-color: #4a4c44; }
     & .form-input:focus { background: #181915; border-color: #9aa17f; }
 
@@ -82,5 +74,6 @@ html[data-theme='dark'] {
         --tk-accent: var(--color-primary);
     }
     & .task-modal { border: 1px solid var(--color-border); }
-    & .form-input { color-scheme: light; }
+    & .task-error { color: #f08a8a; }
+    & .task-modal input[type='date'] { color-scheme: light; }
 }

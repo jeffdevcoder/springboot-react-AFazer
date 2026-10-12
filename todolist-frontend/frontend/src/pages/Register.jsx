@@ -16,6 +16,9 @@ export default function Register() {
 
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [confirmPassword, setConfirmPassword] = useState('')
 
     const update = field => e => {
         setForm(prev => ({
@@ -28,6 +31,11 @@ export default function Register() {
         e.preventDefault()
         setError('')
         setLoading(true)
+
+        if (form.password !== confirmPassword) {
+            setError('As senhas não coincidem.')
+            return
+        }
 
         try {
             await api('/auth/register', {
@@ -104,17 +112,131 @@ export default function Register() {
                             Senha
                         </label>
 
-                        <input
-                            className="form-input"
-                            id="password"
-                            type="password"
-                            placeholder="Mínimo de 6 caracteres"
-                            autoComplete="new-password"
-                            value={form.password}
-                            onChange={update('password')}
-                            minLength={6}
-                            required
-                        />
+                        <div className="password-wrapper">
+                            <input
+                                className="form-input"
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Mínimo de 6 caracteres"
+                                autoComplete="new-password"
+                                value={form.password}
+                                onChange={update('password')}
+                                minLength={6}
+                                required
+                            />
+
+                            <button
+                                className="password-toggle"
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            >
+                                {showPassword ? (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.7"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M3 3l18 18" />
+                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                                        <path d="M9.9 5.2A11 11 0 0 1 12 5c5 0 9 7 9 7a15 15 0 0 1-3 3.8" />
+                                        <path d="M6.2 6.2C3.6 8 2 12 2 12s4 7 10 7a9 9 0 0 0 4-.9" />
+                                    </svg>
+                                ) : (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.7"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="form-field">
+                        <label className="form-label" htmlFor="confirmPassword">
+                            Confirme sua senha
+                        </label>
+
+                        <div className="password-wrapper">
+                            <input
+                                className="form-input"
+                                id="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                placeholder="Digite sua senha novamente"
+                                autoComplete="new-password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                minLength={6}
+                                required
+                            />
+
+                            <button
+                                className="password-toggle"
+                                type="button"
+                                onClick={() =>
+                                    setShowConfirmPassword(!showConfirmPassword)
+                                }
+                                aria-label={
+                                    showConfirmPassword
+                                        ? 'Ocultar confirmação de senha'
+                                        : 'Mostrar confirmação de senha'
+                                }
+                            >
+                                {showConfirmPassword ? (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.7"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M3 3l18 18" />
+                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                                        <path d="M9.9 5.2A11 11 0 0 1 12 5c5 0 9 7 9 7a15 15 0 0 1-3 3.8" />
+                                        <path d="M6.2 6.2C3.6 8 2 12 2 12s4 7 10 7a9 9 0 0 0 4-.9" />
+                                    </svg>
+                                ) : (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.7"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {error && (

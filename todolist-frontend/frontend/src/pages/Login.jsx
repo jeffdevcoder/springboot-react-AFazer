@@ -13,6 +13,7 @@ export default function Login() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
     async function handleSubmit(e) {
         e.preventDefault()
@@ -70,16 +71,40 @@ export default function Login() {
                             Senha
                         </label>
 
-                        <input
-                            className="form-input"
-                            id="password"
-                            type="password"
-                            placeholder="Digite sua senha"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className="password-wrapper">
+                            <input
+                                className="form-input password-input"
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Digite sua senha"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                required
+                            />
+
+                            <button
+                                className="password-toggle"
+                                type="button"
+                                onClick={() => setShowPassword(prev => !prev)}
+                                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                                aria-pressed={showPassword}
+                            >
+                                {showPassword ? (
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M3 3l18 18" />
+                                        <path d="M10.6 10.6a2 2 0 002.8 2.8" />
+                                        <path d="M9.9 5.2A10.8 10.8 0 0112 5c5 0 8.5 4.5 9.5 7a11.5 11.5 0 01-3 4.1" />
+                                        <path d="M6.2 6.2A13 13 0 002.5 12c1 2.5 4.5 7 9.5 7a10.5 10.5 0 004-.8" />
+                                    </svg>
+                                ) : (
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {error && (

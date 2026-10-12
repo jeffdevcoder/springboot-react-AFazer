@@ -98,6 +98,16 @@
     transform: translateY(14px) scale(0.97);
     transition: transform 0.22s ease;
 }
+
+.task-modal textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 50px;
+    padding: 0.75rem;
+    font: inherit;
+    resize: vertical;
+}
+
 .task-overlay.is-open .task-modal { transform: none; }
 .task-modal h2 { margin: 0; font-size: 1.1rem; }
 
