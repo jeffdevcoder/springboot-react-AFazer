@@ -36,13 +36,17 @@ public class TaskService {
 
     @Transactional
     public TaskView create(String email, CreateTaskRequest req) {
+        LocalDate start = req.startDate() != null ? req.startDate() : LocalDate.now();
+        checkDates(start, req.endDate());
+
         Task task = new Task();
         task.setUser(user(email));
         task.setTitle(req.title().trim());
         task.setDescription(req.description() == null || req.description().isBlank()
                 ? null : req.description().trim());
         task.setRecurrence(req.recurrence());
-        task.setStartDate(LocalDate.now());
+        task.setStartDate(start);
+        task.setEndDate(req.endDate());
         tasks.save(task);
         return toView(task, false);
     }
@@ -50,14 +54,19 @@ public class TaskService {
     @Transactional
     public TaskView update(String email, Long id, CreateTaskRequest req) {
         Task task = find(email, id);
-        task.setTitle(req.title().trim());
-        task.setDescription(req.description() == null || req.description().isBlank()
-                ? null : req.description().trim());
+        LocalDate start = req.startDate() != null ? req.startDate() : task.getStartDate();
 
         if (task.getRecurrence() != req.recurrence()) {
             task.setRecurrence(req.recurrence());
-            task.setStartDate(LocalDate.now());
+            if (start.equals(task.getStartDate())) start = LocalDate.now();
         }
+        checkDates(start, req.endDate());
+
+        task.setTitle(req.title().trim());
+        task.setDescription(req.description() == null || req.description().isBlank()
+                ? null : req.description().trim());
+        task.setStartDate(start);
+        task.setEndDate(req.endDate());
         return toView(task, completions.existsByTaskAndDate(task, LocalDate.now()));
     }
 
@@ -94,6 +103,14 @@ public class TaskService {
     }
 
     private TaskView toView(Task t, boolean done) {
-        return new TaskView(t.getId(), t.getTitle(), t.getDescription(), t.getRecurrence(), done);
+        return new TaskView(t.getId(), t.getTitle(), t.getDescription(), t.getRecurrence(),
+                t.getStartDate(), t.getEndDate(), done);
+    }
+
+    private void checkDates(LocalDate start, LocalDate end) {
+        if (end != null && end.isBefore(start)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A data final não pode ser antes da inicial");
+        }
     }
 }

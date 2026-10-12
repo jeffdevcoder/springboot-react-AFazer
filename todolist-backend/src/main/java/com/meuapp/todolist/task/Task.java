@@ -32,8 +32,15 @@ public class Task {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column
+    private LocalDate endDate;
+
+    /** essa tarefa deve aparecer na data informada? */
     public boolean occursOn(LocalDate date) {
         if (date.isBefore(startDate)) return false;
+
+        if (recurrence != Recurrence.ONCE && endDate != null && date.isAfter(endDate)) return false;
+
         int day = Math.min(startDate.getDayOfMonth(), date.lengthOfMonth());
         return switch (recurrence) {
             case ONCE, DAILY -> true;
@@ -54,6 +61,9 @@ public class Task {
     public void setRecurrence(Recurrence recurrence) { this.recurrence = recurrence; }
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
 }

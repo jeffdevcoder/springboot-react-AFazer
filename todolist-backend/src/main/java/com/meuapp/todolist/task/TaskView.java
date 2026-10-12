@@ -1,3 +1,6 @@
 package com.meuapp.todolist.task;
 
-public record TaskView(Long id, String title, String description, Recurrence recurrence, boolean done) {}
+import java.time.LocalDate;
+
+public record TaskView(Long id, String title, String description, Recurrence recurrence,
+                       LocalDate startDate, LocalDate endDate, boolean done) {}
