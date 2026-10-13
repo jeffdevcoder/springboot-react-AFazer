@@ -3,7 +3,10 @@ package com.meuapp.todolist.task;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.Set;
 
 public record CreateTaskRequest(
         @NotBlank(message = "Informe o nome da tarefa") @Size(max = 100) String title,
@@ -11,4 +14,5 @@ public record CreateTaskRequest(
         @NotNull Recurrence recurrence,
         LocalDate startDate,
         LocalDate endDate,
-        boolean urgent) {}
+        boolean urgent,
+        Set<DayOfWeek> weekdays) {}   // só usado quando recurrence = CUSTOM

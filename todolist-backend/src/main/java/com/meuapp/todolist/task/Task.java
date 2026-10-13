@@ -2,7 +2,13 @@ package com.meuapp.todolist.task;
 
 import com.meuapp.todolist.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.EnumSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tasks")
@@ -23,7 +29,8 @@ public class Task {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
     private Recurrence recurrence;
 
     @Column(nullable = false)
@@ -38,6 +45,12 @@ public class Task {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean urgent = false;
 
+    @ElementCollection
+    @CollectionTable(name = "task_weekdays", joinColumns = @JoinColumn(name = "task_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false, length = 10)
+    private Set<DayOfWeek> weekdays = EnumSet.noneOf(DayOfWeek.class);
+
     /** essa tarefa deve aparecer na data informada? */
     public boolean occursOn(LocalDate date) {
         if (date.isBefore(startDate)) return false;
@@ -47,9 +60,12 @@ public class Task {
         int day = Math.min(startDate.getDayOfMonth(), date.lengthOfMonth());
         return switch (recurrence) {
             case ONCE, DAILY -> true;
+            case WEEKDAYS -> date.getDayOfWeek().getValue() <= 5;
+            case WEEKENDS -> date.getDayOfWeek().getValue() >= 6;
             case WEEKLY -> date.getDayOfWeek() == startDate.getDayOfWeek();
             case MONTHLY -> date.getDayOfMonth() == day;
             case YEARLY -> date.getMonth() == startDate.getMonth() && date.getDayOfMonth() == day;
+            case CUSTOM -> weekdays.contains(date.getDayOfWeek());
         };
     }
 
@@ -70,5 +86,6 @@ public class Task {
     public void setActive(boolean active) { this.active = active; }
     public boolean isUrgent() { return urgent; }
     public void setUrgent(boolean urgent) { this.urgent = urgent; }
+    public Set<DayOfWeek> getWeekdays() { return weekdays; }
 
 }

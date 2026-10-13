@@ -1,6 +1,9 @@
 package com.meuapp.todolist.task;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.Set;
 
 public record TaskView(Long id, String title, String description, Recurrence recurrence,
-                       LocalDate startDate, LocalDate endDate, boolean urgent, boolean done) {}
+                       LocalDate startDate, LocalDate endDate, boolean urgent,
+                       Set<DayOfWeek> weekdays, boolean done) {}

@@ -4,9 +4,22 @@ import { api } from '../api'
 const OPTIONS = [
     ['ONCE', 'Uma vez'],
     ['DAILY', 'Diária'],
+    ['WEEKDAYS', 'Dias da semana'],
+    ['WEEKENDS', 'Fins de semana'],
     ['WEEKLY', 'Semanal'],
     ['MONTHLY', 'Mensal'],
     ['YEARLY', 'Anual'],
+    ['CUSTOM', 'Personalizado']
+]
+
+const DAYS = [
+    ['MONDAY', 'Seg'],
+    ['TUESDAY', 'Ter'],
+    ['WEDNESDAY', 'Qua'],
+    ['THURSDAY', 'Qui'],
+    ['FRIDAY', 'Sex'],
+    ['SATURDAY', 'Sáb'],
+    ['SUNDAY', 'Dom'],
 ]
 
 const today = () => new Date().toLocaleDateString('en-CA')
@@ -25,6 +38,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
     const [wasOpen, setWasOpen] = useState(false)
     const titleRef = useRef(null)
     const [urgent, setUrgent] = useState(false)
+    const [weekdays, setWeekdays] = useState([])
 
     if (open !== wasOpen) {
         setWasOpen(open)
@@ -38,6 +52,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
             setError('')
             setConfirmDelete(false)
             setUrgent(task?.urgent ?? false)
+            setWeekdays(task?.weekdays ?? [])
         }
     }
 
@@ -72,6 +87,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                 startDate,
                 endDate: once || noEnd ? null : endDate,
                 urgent,
+                weekdays: custom ? weekdays : [],
             }
             const saved = editing
                 ? await api(`/tasks/${task.id}`, { method: 'PUT', body })
@@ -100,7 +116,15 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
     }
 
     const once = recurrence === 'ONCE'
-    const invalid = !title.trim() || !startDate || (!once && !noEnd && !endDate)
+    const custom = recurrence === 'CUSTOM'
+
+    const toggleDay = day =>
+        setWeekdays(list => (list.includes(day) ? list.filter(d => d !== day) : [...list, day]))
+
+    const invalid =
+        !title.trim() || !startDate ||
+        (!once && !noEnd && !endDate) ||
+        (custom && weekdays.length === 0)
 
     return (
         <div className={`task-overlay ${open ? 'is-open' : ''}`} onMouseDown={onClose}>
@@ -164,15 +188,6 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                     </label>
                 )}
 
-                <label className="task-noend">
-                    <input
-                        type="checkbox"
-                        checked={noEnd}
-                        onChange={e => setNoEnd(e.target.checked)}
-                    />
-                    <span>Sem data final</span>
-                </label>
-
                 <div className="task-options" role="radiogroup" aria-label="Repetição">
                     {OPTIONS.map(([value, label]) => (
                         <label key={value}>
@@ -187,6 +202,21 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                         </label>
                     ))}
                 </div>
+
+                {custom && (
+                    <div className="task-options task-days task-fade" role="group" aria-label="Dias da semana">
+                        {DAYS.map(([value, label]) => (
+                            <label key={value}>
+                                <input
+                                    type="checkbox"
+                                    checked={weekdays.includes(value)}
+                                    onChange={() => toggleDay(value)}
+                                />
+                                <span>{label}</span>
+                            </label>
+                        ))}
+                    </div>
+                )}
 
                 <label className="task-urgent">
                     <input

@@ -7,8 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TaskService {
@@ -29,6 +32,7 @@ public class TaskService {
         return tasks.findByUserAndActiveTrueOrderByIdAsc(user(email)).stream()
                 .filter(t -> t.occursOn(today))
                 .filter(t -> t.getRecurrence() != Recurrence.ONCE
+                        || completions.existsByTaskAndDate(t, today)
                         || !completions.existsByTaskAndDateGreaterThanEqual(t, t.getStartDate()))
                 .map(t -> toView(t, completions.existsByTaskAndDate(t, today)))
                 .toList();
@@ -36,6 +40,7 @@ public class TaskService {
 
     @Transactional
     public TaskView create(String email, CreateTaskRequest req) {
+        checkWeekdays(req);
         LocalDate start = req.startDate() != null ? req.startDate() : LocalDate.now();
         LocalDate end = req.recurrence() == Recurrence.ONCE ? null : req.endDate();
         checkDates(start, end);
@@ -49,6 +54,7 @@ public class TaskService {
         task.setStartDate(start);
         task.setEndDate(end);
         task.setUrgent(req.urgent());
+        applyWeekdays(task, req);
         tasks.save(task);
         return toView(task, false);
     }
@@ -63,6 +69,7 @@ public class TaskService {
             task.setRecurrence(req.recurrence());
             if (start.equals(task.getStartDate())) start = LocalDate.now();
         }
+        checkWeekdays(req);
         checkDates(start, end);
 
         task.setTitle(req.title().trim());
@@ -71,6 +78,7 @@ public class TaskService {
         task.setStartDate(start);
         task.setEndDate(end);
         task.setUrgent(req.urgent());
+        applyWeekdays(task, req);
         return toView(task, completions.existsByTaskAndDate(task, LocalDate.now()));
     }
 
@@ -107,14 +115,31 @@ public class TaskService {
     }
 
     private TaskView toView(Task t, boolean done) {
+        Set<DayOfWeek> days = EnumSet.noneOf(DayOfWeek.class);
+        if (t.getRecurrence() == Recurrence.CUSTOM) days.addAll(t.getWeekdays());
         return new TaskView(t.getId(), t.getTitle(), t.getDescription(), t.getRecurrence(),
-                t.getStartDate(), t.getEndDate(), t.isUrgent(), done);
+                t.getStartDate(), t.getEndDate(), t.isUrgent(), days, done);
     }
 
     private void checkDates(LocalDate start, LocalDate end) {
         if (end != null && end.isBefore(start)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "A data final não pode ser antes da inicial");
+        }
+    }
+
+    private void checkWeekdays(CreateTaskRequest req) {
+        if (req.recurrence() == Recurrence.CUSTOM
+                && (req.weekdays() == null || req.weekdays().isEmpty())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Escolha pelo menos um dia da semana");
+        }
+    }
+
+    private void applyWeekdays(Task task, CreateTaskRequest req) {
+        task.getWeekdays().clear();
+        if (req.recurrence() == Recurrence.CUSTOM) {
+            task.getWeekdays().addAll(req.weekdays());
         }
     }
 }

@@ -11,9 +11,12 @@ import ThemeToggle from '../components/ThemeToggle'
 const LABELS = {
     ONCE: 'Uma vez',
     DAILY: 'Diária',
+    WEEKDAYS: 'Dias da semana',
+    WEEKENDS: 'Fins de semana',
     WEEKLY: 'Semanal',
     MONTHLY: 'Mensal',
     YEARLY: 'Anual',
+    CUSTOM: 'Personalizado',
 }
 
 export default function Today() {
@@ -37,21 +40,14 @@ export default function Today() {
         mark(done)
         try {
             await api(`/tasks/${task.id}/complete`, { method: done ? 'POST' : 'DELETE' })
-            if (done && task.recurrence === 'ONCE') {
-                setTimeout(() => setTasks(list => list.filter(t => t.id !== task.id)), 600)
-            }
         } catch (err) {
             mark(!done)
             setError(err.message)
         }
     }
 
-    function handleSaved(saved) {
-        setTasks(list =>
-            list.some(t => t.id === saved.id)
-                ? list.map(t => (t.id === saved.id ? saved : t))
-                : [...list, saved]
-        )
+    function handleSaved() {
+        api('/tasks/today').then(setTasks).catch(err => setError(err.message))
     }
 
     function handleDeleted(id) {
