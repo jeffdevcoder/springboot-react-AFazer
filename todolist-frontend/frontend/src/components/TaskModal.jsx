@@ -24,6 +24,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
     const [confirmDelete, setConfirmDelete] = useState(false)
     const [wasOpen, setWasOpen] = useState(false)
     const titleRef = useRef(null)
+    const [urgent, setUrgent] = useState(false)
 
     if (open !== wasOpen) {
         setWasOpen(open)
@@ -36,6 +37,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
             setNoEnd(task ? !task.endDate : false)
             setError('')
             setConfirmDelete(false)
+            setUrgent(task?.urgent ?? false)
         }
     }
 
@@ -68,7 +70,8 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                 description,
                 recurrence,
                 startDate,
-                endDate: noEnd ? null : endDate,
+                endDate: once || noEnd ? null : endDate,
+                urgent,
             }
             const saved = editing
                 ? await api(`/tasks/${task.id}`, { method: 'PUT', body })
@@ -96,7 +99,8 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
         }
     }
 
-    const invalid = !title.trim() || !startDate || (!noEnd && !endDate)
+    const once = recurrence === 'ONCE'
+    const invalid = !title.trim() || !startDate || (!once && !noEnd && !endDate)
 
     return (
         <div className={`task-overlay ${open ? 'is-open' : ''}`} onMouseDown={onClose}>
@@ -123,7 +127,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
 
                 <div className="task-dates">
                     <label>
-                        <span className="form-label">Início</span>
+                        <span className="form-label">{once ? 'Data' : 'Início'}</span>
                         <input
                             className="form-input"
                             type="date"
@@ -132,19 +136,33 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                             required
                         />
                     </label>
-                    <label>
-                        <span className="form-label">Fim</span>
-                        <input
-                            className="form-input"
-                            type="date"
-                            value={endDate}
-                            min={startDate}
-                            disabled={noEnd}
-                            onChange={e => setEndDate(e.target.value)}
-                            required={!noEnd}
-                        />
-                    </label>
+
+                    {!once && (
+                        <label className="task-fade">
+                            <span className="form-label">Fim</span>
+                            <input
+                                className="form-input"
+                                type="date"
+                                value={endDate}
+                                min={startDate}
+                                disabled={noEnd}
+                                onChange={e => setEndDate(e.target.value)}
+                                required={!noEnd}
+                            />
+                        </label>
+                    )}
                 </div>
+
+                {!once && (
+                    <label className="task-noend task-fade">
+                        <input
+                            type="checkbox"
+                            checked={noEnd}
+                            onChange={e => setNoEnd(e.target.checked)}
+                        />
+                        <span>Sem data final</span>
+                    </label>
+                )}
 
                 <label className="task-noend">
                     <input
@@ -169,6 +187,15 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                         </label>
                     ))}
                 </div>
+
+                <label className="task-urgent">
+                    <input
+                        type="checkbox"
+                        checked={urgent}
+                        onChange={e => setUrgent(e.target.checked)}
+                    />
+                    <span>🚨 É urgente?</span>
+                </label>
 
                 {error && <p className="task-error">{error}</p>}
 

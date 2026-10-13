@@ -35,6 +35,9 @@ public class Task {
     @Column
     private LocalDate endDate;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean urgent = false;
+
     /** essa tarefa deve aparecer na data informada? */
     public boolean occursOn(LocalDate date) {
         if (date.isBefore(startDate)) return false;
@@ -65,5 +68,7 @@ public class Task {
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public boolean isUrgent() { return urgent; }
+    public void setUrgent(boolean urgent) { this.urgent = urgent; }
 
 }

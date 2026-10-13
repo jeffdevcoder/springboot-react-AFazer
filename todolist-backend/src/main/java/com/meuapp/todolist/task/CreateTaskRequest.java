@@ -10,4 +10,5 @@ public record CreateTaskRequest(
         @Size(max = 500) String description,
         @NotNull Recurrence recurrence,
         LocalDate startDate,
-        LocalDate endDate) {}
+        LocalDate endDate,
+        boolean urgent) {}

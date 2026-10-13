@@ -134,7 +134,12 @@ export default function Today() {
                                         onClick={() => setModal({ open: true, task })}
                                     >
                                         <span className="task-text">
-                                            <span className="task-title">{task.title}</span>
+                                            <span className="task-title">
+                                                {task.urgent && (
+                                                    <span className="task-flag" role="img" aria-label="Urgente">🚨</span>
+                                                )}
+                                                                                            {task.title}
+                                            </span>
                                             {task.description && (
                                                 <small className="task-desc">{task.description}</small>
                                             )}

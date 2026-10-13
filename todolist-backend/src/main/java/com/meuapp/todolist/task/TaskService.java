@@ -37,7 +37,8 @@ public class TaskService {
     @Transactional
     public TaskView create(String email, CreateTaskRequest req) {
         LocalDate start = req.startDate() != null ? req.startDate() : LocalDate.now();
-        checkDates(start, req.endDate());
+        LocalDate end = req.recurrence() == Recurrence.ONCE ? null : req.endDate();
+        checkDates(start, end);
 
         Task task = new Task();
         task.setUser(user(email));
@@ -46,7 +47,8 @@ public class TaskService {
                 ? null : req.description().trim());
         task.setRecurrence(req.recurrence());
         task.setStartDate(start);
-        task.setEndDate(req.endDate());
+        task.setEndDate(end);
+        task.setUrgent(req.urgent());
         tasks.save(task);
         return toView(task, false);
     }
@@ -55,18 +57,20 @@ public class TaskService {
     public TaskView update(String email, Long id, CreateTaskRequest req) {
         Task task = find(email, id);
         LocalDate start = req.startDate() != null ? req.startDate() : task.getStartDate();
+        LocalDate end = req.recurrence() == Recurrence.ONCE ? null : req.endDate();
 
         if (task.getRecurrence() != req.recurrence()) {
             task.setRecurrence(req.recurrence());
             if (start.equals(task.getStartDate())) start = LocalDate.now();
         }
-        checkDates(start, req.endDate());
+        checkDates(start, end);
 
         task.setTitle(req.title().trim());
         task.setDescription(req.description() == null || req.description().isBlank()
                 ? null : req.description().trim());
         task.setStartDate(start);
-        task.setEndDate(req.endDate());
+        task.setEndDate(end);
+        task.setUrgent(req.urgent());
         return toView(task, completions.existsByTaskAndDate(task, LocalDate.now()));
     }
 
@@ -104,7 +108,7 @@ public class TaskService {
 
     private TaskView toView(Task t, boolean done) {
         return new TaskView(t.getId(), t.getTitle(), t.getDescription(), t.getRecurrence(),
-                t.getStartDate(), t.getEndDate(), done);
+                t.getStartDate(), t.getEndDate(), t.isUrgent(), done);
     }
 
     private void checkDates(LocalDate start, LocalDate end) {

@@ -158,3 +158,12 @@
 
 .task-noend { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; }
 .task-noend input { accent-color: var(--tk-accent); }
+
+.task-noend,
+.task-urgent { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer; }
+.task-noend input,
+.task-urgent input { accent-color: var(--tk-accent); }
+
+.task-flag { margin-right: 0.4rem; }
+
+.task-fade { animation: task-swap 0.22s ease both; }
