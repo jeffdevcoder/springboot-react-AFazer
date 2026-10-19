@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Set;
 
 public record CreateTaskRequest(
@@ -15,4 +16,5 @@ public record CreateTaskRequest(
         LocalDate startDate,
         LocalDate endDate,
         boolean urgent,
-        Set<DayOfWeek> weekdays) {}   // só usado quando recurrence = CUSTOM
+        Set<DayOfWeek> weekdays,
+        LocalTime time) {}

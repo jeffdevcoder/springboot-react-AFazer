@@ -180,7 +180,6 @@
 
 .task-fade { animation: task-swap 0.22s ease both; }
 
-/* descrição/título longos: cortam com "..." em vez de criar scroll horizontal */
 .task-body,
 .task-text { min-width: 0; }
 
@@ -198,3 +197,130 @@
 .task-days { flex-wrap: nowrap; gap: 0.3rem; }
 .task-days label { flex: 1; min-width: 0; }
 .task-days span { display: block; padding: 0.35rem 0; font-size: 0.8rem; text-align: center; }
+
+.date-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text);
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.task-add { white-space: nowrap; }
+
+.date-chip.is-today {
+    background: #000000;
+    border-color: transparent;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.date-short { display: none; }
+
+.task-time { display: flex; flex-direction: column; gap: 10px; }
+
+.task-time-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.4rem;
+}
+
+.task-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.task-clear:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+
+@media (max-width: 560px) {
+    .panel-header {
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 12px;
+    }
+
+    .panel-header > div { display: contents; }
+
+    .panel-title { order: 1; }
+    .task-add { order: 2; margin-left: auto; }
+    .panel-description { order: 3; flex-basis: 100%; margin: 0; }
+}
+
+.day-nav { display: flex; align-items: center; gap: 10px; }
+
+.day-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.day-btn:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    border-color: color-mix(in srgb, currentColor 35%, transparent);
+}
+.day-btn:active { transform: scale(0.92); }
+
+.task-check:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.task-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.task-clock {
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
+}
+
+@media (max-width: 560px) {
+    .day-nav {
+        width: 100%;
+        min-width: 0;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .day-nav .date-chip {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 5px 8px;
+        font-size: clamp(11px, 3.4vw, 13px);
+    }
+
+    .day-nav .date-short {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

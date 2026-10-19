@@ -7,6 +7,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -41,6 +42,9 @@ public class Task {
 
     @Column
     private LocalDate endDate;
+
+    @Column(name = "task_time")
+    private LocalTime time;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean urgent = false;
@@ -87,5 +91,7 @@ public class Task {
     public boolean isUrgent() { return urgent; }
     public void setUrgent(boolean urgent) { this.urgent = urgent; }
     public Set<DayOfWeek> getWeekdays() { return weekdays; }
+    public LocalTime getTime() { return time; }
+    public void setTime(LocalTime time) { this.time = time; }
 
 }

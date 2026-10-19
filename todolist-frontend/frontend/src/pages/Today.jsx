@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { api } from '../api'
+import Logo from '../components/Logo'
+import ThemeToggle from '../components/ThemeToggle'
 import TaskModal from '../components/TaskModal'
 import '../styles/auth.css'
 import '../styles/tasks.css'
-import Logo from '../components/Logo'
-import ThemeToggle from '../components/ThemeToggle'
 
 const LABELS = {
     ONCE: 'Uma vez',
@@ -19,18 +19,74 @@ const LABELS = {
     CUSTOM: 'Personalizado',
 }
 
+// datas como texto AAAA-MM-DD, no fuso local
+const toIso = date => date.toLocaleDateString('en-CA')
+
+function fromIso(iso) {
+    const [year, month, day] = iso.split('-').map(Number)
+    return new Date(year, month - 1, day)
+}
+
+function addDays(iso, amount) {
+    const date = fromIso(iso)
+    date.setDate(date.getDate() + amount)
+    return toIso(date)
+}
+
+const capitalize = text => text.charAt(0).toUpperCase() + text.slice(1)
+
+// computador: "Terça-feira, 20 de outubro de 2026"
+function longLabel(iso) {
+    return capitalize(
+        fromIso(iso).toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        })
+    )
+}
+
+// tablet/celular: "Terça-feira, 20/10/2026"
+function shortLabel(iso) {
+    const date = fromIso(iso)
+    const weekday = capitalize(date.toLocaleDateString('pt-BR', { weekday: 'long' }))
+    const numeric = date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    })
+    return `${weekday}, ${numeric}`
+}
+
 export default function Today() {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
+    const [selectedDate, setSelectedDate] = useState(() => toIso(new Date()))
     const [tasks, setTasks] = useState([])
     const [modal, setModal] = useState({ open: false, task: null })
     const [error, setError] = useState('')
+    const [notice, setNotice] = useState('')
+
+    const today = toIso(new Date())
+    const isToday = selectedDate === today
+    const isFuture = selectedDate > today
 
     const closeModal = useCallback(() => setModal(m => ({ ...m, open: false })), [])
 
     useEffect(() => {
-        api('/tasks/today').then(setTasks).catch(err => setError(err.message))
-    }, [])
+        let ignore = false
+        api(`/tasks/day?date=${selectedDate}`)
+            .then(list => { if (!ignore) setTasks(list) })
+            .catch(err => { if (!ignore) setError(err.message) })
+        return () => { ignore = true }
+    }, [selectedDate])
+
+    function goTo(iso) {
+        setError('')
+        setNotice('')
+        setSelectedDate(iso)
+    }
 
     async function toggle(task) {
         const done = !task.done
@@ -39,15 +95,26 @@ export default function Today() {
 
         mark(done)
         try {
-            await api(`/tasks/${task.id}/complete`, { method: done ? 'POST' : 'DELETE' })
+            await api(`/tasks/${task.id}/complete?date=${selectedDate}`, {
+                method: done ? 'POST' : 'DELETE',
+            })
         } catch (err) {
             mark(!done)
             setError(err.message)
         }
     }
 
-    function handleSaved() {
-        api('/tasks/today').then(setTasks).catch(err => setError(err.message))
+    async function handleSaved(saved) {
+        try {
+            const list = await api(`/tasks/day?date=${selectedDate}`)
+            setTasks(list)
+            if (!list.some(t => t.id === saved.id)) {
+                setNotice('Tarefa salva. Ela não cai neste dia, então só aparece nos dias em que acontece.')
+                setTimeout(() => setNotice(''), 5000)
+            }
+        } catch (err) {
+            setError(err.message)
+        }
     }
 
     function handleDeleted(id) {
@@ -64,7 +131,7 @@ export default function Today() {
             <header className="dashboard-header">
                 <a href="/today" className="brand">
                     <Logo />
-                    <span>A fazer.</span>
+                    <span>a fazer.</span>
                 </a>
 
                 <div className="user-area">
@@ -81,7 +148,7 @@ export default function Today() {
                     <p className="dashboard-date">Seu espaço pessoal</p>
 
                     <h1 className="dashboard-title">
-                        Checklist de hoje.
+                        {isToday ? 'Checklist de hoje.' : 'Checklist do dia.'}
                     </h1>
 
                     <p className="dashboard-subtitle">
@@ -93,13 +160,40 @@ export default function Today() {
                 <section className="dashboard-panel">
                     <div className="panel-header">
                         <div>
-                            <h2 className="panel-title">
-                                Minhas tarefas
-                            </h2>
+                            <h2 className="panel-title">Minhas tarefas</h2>
 
-                            <p className="panel-description">
-                                Tudo começa com uma pequena ação.
-                            </p>
+                            <div className="panel-description day-nav">
+                                <button
+                                    type="button"
+                                    className="day-btn"
+                                    aria-label="Dia anterior"
+                                    onClick={() => goTo(addDays(selectedDate, -1))}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                                         strokeLinejoin="round" aria-hidden="true">
+                                        <path d="M15 18l-6-6 6-6" />
+                                    </svg>
+                                </button>
+
+                                <span className={`date-chip ${isToday ? 'is-today' : ''}`}>
+                                    <span className="date-long">{longLabel(selectedDate)}</span>
+                                    <span className="date-short">{shortLabel(selectedDate)}</span>
+                                </span>
+
+                                <button
+                                    type="button"
+                                    className="day-btn"
+                                    aria-label="Próximo dia"
+                                    onClick={() => goTo(addDays(selectedDate, 1))}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                                         strokeLinejoin="round" aria-hidden="true">
+                                        <path d="M9 18l6-6-6-6" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <button
@@ -112,48 +206,41 @@ export default function Today() {
                     </div>
 
                     {error && <p className="task-error">{error}</p>}
+                    {notice && <p className="panel-description">{notice}</p>}
 
                     {tasks.length > 0 ? (
                         <ul className="task-list">
                             {tasks.map(task => (
                                 <li key={task.id} className={`task-item ${task.done ? 'is-done' : ''}`}>
-                                    <input
-                                        className="task-check"
-                                        type="checkbox"
-                                        checked={task.done}
-                                        onChange={() => toggle(task)}
-                                        aria-label={`Marcar "${task.title}" como feita`}
-                                    />
-                                    <button
-                                        className="task-body"
-                                        type="button"
-                                        onClick={() => setModal({ open: true, task })}
-                                    >
+                                    <input className="task-check" type="checkbox" checked={task.done} disabled={isFuture} onChange={() => toggle(task)} aria-label={`Marcar "${task.title}" como feita`} />
+                                    <button className="task-body" type="button" onClick={() => setModal({ open: true, task })}>
                                         <span className="task-text">
                                             <span className="task-title">
                                                 {task.urgent && (
                                                     <span className="task-flag" role="img" aria-label="Urgente">🚨</span>
                                                 )}
-                                                                                            {task.title}
+                                                {task.title}
                                             </span>
                                             {task.description && (
-                                                <small className="task-desc">{task.description}</small>
+                                                <small className="task-desc" title={task.description}>
+                                                    {task.description}
+                                                </small>
                                             )}
                                         </span>
-                                        <span className="task-tag">{LABELS[task.recurrence]}</span>
+
+                                            <span className="task-meta">
+                                            {task.time && <span className="task-clock">{task.time.slice(0, 5)}</span>}
+                                                <span className="task-tag">{LABELS[task.recurrence]}</span>
+                                        </span>
                                     </button>
                                 </li>
                             ))}
                         </ul>
                     ) : (
                         <div className="empty-state">
-                            <div className="empty-icon" aria-hidden="true">
-                                ✓
-                            </div>
+                            <div className="empty-icon" aria-hidden="true">✓</div>
 
-                            <h3 className="empty-title">
-                                Seu dia começa aqui
-                            </h3>
+                            <h3 className="empty-title">Seu dia começa aqui</h3>
 
                             <p className="empty-description">
                                 Este espaço está pronto para receber suas
@@ -172,6 +259,7 @@ export default function Today() {
             <TaskModal
                 open={modal.open}
                 task={modal.task}
+                defaultDate={isFuture ? selectedDate : today}
                 onClose={closeModal}
                 onSaved={handleSaved}
                 onDeleted={handleDeleted}

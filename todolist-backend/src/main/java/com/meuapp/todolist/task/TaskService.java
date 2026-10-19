@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -28,14 +29,58 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public List<TaskView> today(String email) {
+        return forDate(email, LocalDate.now());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskView> forDate(String email, LocalDate date) {
         LocalDate today = LocalDate.now();
         return tasks.findByUserAndActiveTrueOrderByIdAsc(user(email)).stream()
-                .filter(t -> t.occursOn(today))
-                .filter(t -> t.getRecurrence() != Recurrence.ONCE
-                        || completions.existsByTaskAndDate(t, today)
-                        || !completions.existsByTaskAndDateGreaterThanEqual(t, t.getStartDate()))
-                .map(t -> toView(t, completions.existsByTaskAndDate(t, today)))
+                .filter(t -> t.occursOn(date))
+                .filter(t -> t.getRecurrence() != Recurrence.ONCE || onceVisible(t, date, today))
+                .sorted(Comparator.comparing(Task::getTime, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Task::getId))
+                .map(t -> toView(t, completions.existsByTaskAndDate(t, date)))
                 .toList();
+    }
+
+    private boolean onceVisible(Task t, LocalDate date, LocalDate today) {
+        // dia futuro: só aparece no dia marcado, sem repetir a pendência
+        if (date.isAfter(today)) return date.equals(t.getStartDate());
+
+        // hoje ou passado: fica pendente até o dia em que foi concluída
+        return completions.findFirstByTaskAndDateGreaterThanEqualOrderByDateAsc(t, t.getStartDate())
+                .map(c -> !date.isAfter(c.getDate()))
+                .orElse(true);
+    }
+
+    @Transactional
+    public void complete(String email, Long id, LocalDate date) {
+        LocalDate day = date != null ? date : LocalDate.now();
+        if (day.isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Não dá para marcar um dia que ainda não chegou");
+        }
+        Task task = find(email, id);
+        if (!task.occursOn(day)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tarefa não é deste dia");
+        }
+        // "uma vez" só pode ser concluída em um único dia
+        if (task.getRecurrence() == Recurrence.ONCE
+                && completions.existsByTaskAndDateGreaterThanEqual(task, task.getStartDate())
+                && !completions.existsByTaskAndDate(task, day)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Esta tarefa já foi concluída em outro dia");
+        }
+        if (!completions.existsByTaskAndDate(task, day)) {
+            completions.save(new TaskCompletion(task, day));
+        }
+    }
+
+    @Transactional
+    public void uncomplete(String email, Long id, LocalDate date) {
+        LocalDate day = date != null ? date : LocalDate.now();
+        completions.deleteByTaskAndDate(find(email, id), day);
     }
 
     @Transactional
@@ -55,6 +100,7 @@ public class TaskService {
         task.setEndDate(end);
         task.setUrgent(req.urgent());
         applyWeekdays(task, req);
+        task.setTime(req.time());
         tasks.save(task);
         return toView(task, false);
     }
@@ -79,6 +125,7 @@ public class TaskService {
         task.setEndDate(end);
         task.setUrgent(req.urgent());
         applyWeekdays(task, req);
+        task.setTime(req.time());
         return toView(task, completions.existsByTaskAndDate(task, LocalDate.now()));
     }
 
@@ -118,7 +165,7 @@ public class TaskService {
         Set<DayOfWeek> days = EnumSet.noneOf(DayOfWeek.class);
         if (t.getRecurrence() == Recurrence.CUSTOM) days.addAll(t.getWeekdays());
         return new TaskView(t.getId(), t.getTitle(), t.getDescription(), t.getRecurrence(),
-                t.getStartDate(), t.getEndDate(), t.isUrgent(), days, done);
+                t.getStartDate(), t.getEndDate(), t.isUrgent(), days, t.getTime(), done);
     }
 
     private void checkDates(LocalDate start, LocalDate end) {

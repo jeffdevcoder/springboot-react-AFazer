@@ -24,7 +24,7 @@ const DAYS = [
 
 const today = () => new Date().toLocaleDateString('en-CA')
 
-export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
+export default function TaskModal({ open, task, defaultDate, onClose, onSaved, onDeleted }) {
     const editing = Boolean(task)
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
@@ -39,6 +39,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
     const titleRef = useRef(null)
     const [urgent, setUrgent] = useState(false)
     const [weekdays, setWeekdays] = useState([])
+    const [time, setTime] = useState('')
 
     if (open !== wasOpen) {
         setWasOpen(open)
@@ -46,13 +47,14 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
             setTitle(task?.title ?? '')
             setDescription(task?.description ?? '')
             setRecurrence(task?.recurrence ?? 'ONCE')
-            setStartDate(task?.startDate ?? today())
+            setStartDate(task?.startDate ?? defaultDate ?? today())
             setEndDate(task?.endDate ?? '')
             setNoEnd(task ? !task.endDate : false)
             setError('')
             setConfirmDelete(false)
             setUrgent(task?.urgent ?? false)
             setWeekdays(task?.weekdays ?? [])
+            setTime(task?.time ? task.time.slice(0, 5) : '')
         }
     }
 
@@ -88,6 +90,7 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                 endDate: once || noEnd ? null : endDate,
                 urgent,
                 weekdays: custom ? weekdays : [],
+                time: time || null,
             }
             const saved = editing
                 ? await api(`/tasks/${task.id}`, { method: 'PUT', body })
@@ -187,6 +190,30 @@ export default function TaskModal({ open, task, onClose, onSaved, onDeleted }) {
                         <span>Sem data final</span>
                     </label>
                 )}
+
+                <div className="task-time">
+                    <div className="task-time-head">
+                        <label className="form-label" htmlFor="task-time">Horário (opcional)</label>
+                        {time && (
+                            <button
+                                type="button"
+                                className="task-clear"
+                                onClick={() => setTime('')}
+                                aria-label="Limpar horário"
+                                title="Limpar horário"
+                            >
+                                −
+                            </button>
+                        )}
+                    </div>
+                    <input
+                        id="task-time"
+                        className="form-input"
+                        type="time"
+                        value={time}
+                        onChange={e => setTime(e.target.value)}
+                    />
+                </div>
 
                 <div className="task-options" role="radiogroup" aria-label="Repetição">
                     {OPTIONS.map(([value, label]) => (

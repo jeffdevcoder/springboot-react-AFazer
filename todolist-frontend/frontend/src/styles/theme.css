@@ -1,5 +1,6 @@
 /* botão de tema */
-.theme-toggle {
+.theme-toggle,
+.logout-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -13,7 +14,8 @@
     cursor: pointer;
     transition: background 0.2s;
 }
-.theme-toggle:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.theme-toggle:hover,
+.logout-icon:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
 .theme-toggle.is-floating { position: fixed; top: 1rem; right: 1rem; z-index: 40; }
 
 /* modo noturno */
@@ -43,6 +45,7 @@ html[data-theme='dark'] {
     & .auth-eyebrow,
     & .dashboard-date { color: #8d9082; }
     & .form-label { color: #d9dbd1; }
+    & .date-chip.is-today { background: #ffffff; color: #000000; }
 
     & .form-input { background: #141512; }
     & .form-input::placeholder { color: #70726a; }
@@ -76,4 +79,17 @@ html[data-theme='dark'] {
     & .task-modal { border: 1px solid var(--color-border); }
     & .task-error { color: #f08a8a; }
     & .task-modal input[type='date'] { color-scheme: light; }
+}
+
+.user-area { min-width: 0; }
+.user-area .user-email {
+    min-width: 0;
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+    .user-area .user-email { display: inline-block; max-width: 7rem; }
 }

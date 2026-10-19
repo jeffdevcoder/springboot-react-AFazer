@@ -1,11 +1,13 @@
 package com.meuapp.todolist.task;
 
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -29,14 +31,20 @@ public class TaskController {
     }
 
     @PostMapping("/{id}/complete")
-    public ResponseEntity<Void> complete(@PathVariable Long id, Principal principal) {
-        service.complete(principal.getName(), id);
+    public ResponseEntity<Void> complete(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Principal principal) {
+        service.complete(principal.getName(), id, date);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/complete")
-    public ResponseEntity<Void> uncomplete(@PathVariable Long id, Principal principal) {
-        service.uncomplete(principal.getName(), id);
+    public ResponseEntity<Void> uncomplete(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Principal principal) {
+        service.uncomplete(principal.getName(), id, date);
         return ResponseEntity.noContent().build();
     }
 
@@ -51,5 +59,12 @@ public class TaskController {
     public ResponseEntity<Void> delete(@PathVariable Long id, Principal principal) {
         service.delete(principal.getName(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/day")
+    public List<TaskView> day(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Principal principal) {
+        return service.forDate(principal.getName(), date);
     }
 }
